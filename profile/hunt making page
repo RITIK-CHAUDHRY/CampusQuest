@@ -1,0 +1,232 @@
+'use client'
+
+import { useState } from 'react'
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Textarea } from "@/components/ui/textarea"
+import { Label } from "@/components/ui/label"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import { DatePicker } from "@/components/ui/date-picker"
+import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd'
+import { Plus, GripVertical, X, MapPin } from 'lucide-react'
+
+interface Clue {
+  id: string
+  title: string
+  description: string
+  hint?: string
+  location: {
+    lat: number
+    lng: number
+  }
+}
+
+export default function Component() {
+  const [huntData, setHuntData] = useState({
+    title: '',
+    description: '',
+    startDate: new Date(),
+    endDate: new Date(),
+    difficulty: 'medium',
+    maxParticipants: 50
+  })
+
+  const [clues, setClues] = useState<Clue[]>([])
+  const [selectedLocation, setSelectedLocation] = useState<{ lat: number; lng: number } | null>(null)
+
+  const addClue = () => {
+    const newClue: Clue = {
+      id: `clue-${clues.length + 1}`,
+      title: '',
+      description: '',
+      location: { lat: 0, lng: 0 }
+    }
+    setClues([...clues, newClue])
+  }
+
+  const removeClue = (index: number) => {
+    const newClues = [...clues]
+    newClues.splice(index, 1)
+    setClues(newClues)
+  }
+
+  const updateClue = (index: number, field: keyof Clue, value: any) => {
+    const newClues = [...clues]
+    newClues[index] = { ...newClues[index], [field]: value }
+    setClues(newClues)
+  }
+
+  const handleDragEnd = (result: any) => {
+    if (!result.destination) return
+
+    const items = Array.from(clues)
+    const [reorderedItem] = items.splice(result.source.index, 1)
+    items.splice(result.destination.index, 0, reorderedItem)
+
+    setClues(items)
+  }
+
+  return (
+    <div className="container mx-auto py-8 px-4">
+      <Card>
+        <CardHeader>
+          <CardTitle>Create New Hunt</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          {/* Basic Information */}
+          <div className="grid gap-6">
+            <div className="space-y-2">
+              <Label htmlFor="title">Hunt Title</Label>
+              <Input
+                id="title"
+                value={huntData.title}
+                onChange={(e) => setHuntData({ ...huntData, title: e.target.value })}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="description">Description</Label>
+              <Textarea
+                id="description"
+                value={huntData.description}
+                onChange={(e) => setHuntData({ ...huntData, description: e.target.value })}
+              />
+            </div>
+
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-2">
+                <Label>Start Date</Label>
+                <DatePicker
+                  date={huntData.startDate}
+                  onChange={(date) => date && setHuntData({ ...huntData, startDate: date })}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>End Date</Label>
+                <DatePicker
+                  date={huntData.endDate}
+                  onChange={(date) => date && setHuntData({ ...huntData, endDate: date })}
+                />
+              </div>
+            </div>
+
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-2">
+                <Label>Difficulty</Label>
+                <Select
+                  value={huntData.difficulty}
+                  onValueChange={(value) => setHuntData({ ...huntData, difficulty: value })}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select difficulty" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="easy">Easy</SelectItem>
+                    <SelectItem value="medium">Medium</SelectItem>
+                    <SelectItem value="hard">Hard</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="maxParticipants">Max Participants</Label>
+                <Input
+                  id="maxParticipants"
+                  type="number"
+                  value={huntData.maxParticipants}
+                  onChange={(e) => setHuntData({ ...huntData, maxParticipants: parseInt(e.target.value) })}
+                />
+              </div>
+            </div>
+          </div>
+
+          
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-semibold">Clues</h3>
+              <Button onClick={addClue} size="sm">
+                <Plus className="h-4 w-4 mr-2" />
+                Add Clue
+              </Button>
+            </div>
+
+            <DragDropContext onDragEnd={handleDragEnd}>
+              <Droppable droppableId="clues">
+                {(provided) => (
+                  <div {...provided.droppableProps} ref={provided.innerRef} className="space-y-4">
+                    {clues.map((clue, index) => (
+                      <Draggable key={clue.id} draggableId={clue.id} index={index}>
+                        {(provided) => (
+                          <Card
+                            ref={provided.innerRef}
+                            {...provided.draggableProps}
+                          >
+                            <CardContent className="pt-6">
+                              <div className="flex items-start gap-4">
+                                <div {...provided.dragHandleProps}>
+                                  <GripVertical className="h-5 w-5 text-muted-foreground" />
+                                </div>
+                                <div className="flex-1 space-y-4">
+                                  <div className="flex items-start justify-between">
+                                    <Input
+                                      placeholder="Clue title"
+                                      value={clue.title}
+                                      onChange={(e) => updateClue(index, 'title', e.target.value)}
+                                      className="max-w-sm"
+                                    />
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      onClick={() => removeClue(index)}
+                                    >
+                                      <X className="h-4 w-4" />
+                                    </Button>
+                                  </div>
+                                  <Textarea
+                                    placeholder="Clue description"
+                                    value={clue.description}
+                                    onChange={(e) => updateClue(index, 'description', e.target.value)}
+                                  />
+                                  <Textarea
+                                    placeholder="Hint (optional)"
+                                    value={clue.hint}
+                                    onChange={(e) => updateClue(index, 'hint', e.target.value)}
+                                  />
+                                  <Button
+                                    variant="outline"
+                                    onClick={() => {
+                                      // Open map selection modal
+                                    }}
+                                  >
+                                    <MapPin className="h-4 w-4 mr-2" />
+                                    Set Location
+                                  </Button>
+                                </div>
+                              </div>
+                            </CardContent>
+                          </Card>
+                        )}
+                      </Draggable>
+                    ))}
+                    {provided.placeholder}
+                  </div>
+                )}
+              </Droppable>
+            </DragDropContext>
+          </div>
+
+          <div className="flex justify-end gap-4">
+            <Button variant="outline">Save as Draft</Button>
+            <Button>Create Hunt</Button>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  )
+}
