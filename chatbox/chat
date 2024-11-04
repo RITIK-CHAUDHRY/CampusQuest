@@ -1,0 +1,133 @@
+'use client'
+
+import { useEffect, useRef, useState } from 'react'
+import { io, Socket } from 'socket.io-client'
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { ScrollArea } from "@/components/ui/scroll-area"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+
+interface Message {
+  userId: string
+  username: string
+  message: string
+  timestamp: Date
+}
+
+interface ChatProps {
+  huntId: string
+  token: string
+}
+
+export default function Chat({ huntId, token = "demo-token" }: ChatProps) {
+  const [socket, setSocket] = useState<Socket | null>(null)
+  const [messages, setMessages] = useState<Message[]>([])
+  const [newMessage, setNewMessage] = useState('')
+  const [isConnected, setIsConnected] = useState(false)
+  const scrollRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const socketInstance = io(process.env.NEXT_PUBLIC_SOCKET_URL || 'http://localhost:5000', {
+      auth: { token }
+    })
+
+    socketInstance.on('connect', () => {
+      setIsConnected(true)
+      socketInstance.emit('joinHunt', huntId)
+    })
+
+    socketInstance.on('disconnect', () => {
+      setIsConnected(false)
+    })
+
+    socketInstance.on('newMessage', (message: Message) => {
+      setMessages(prev => [...prev, message])
+    })
+
+    socketInstance.on('userJoined', (data) => {
+      setMessages(prev => [...prev, {
+        userId: data.userId,
+        username: data.username,
+        message: data.message,
+        timestamp: new Date()
+      }])
+    })
+
+    setSocket(socketInstance)
+
+    return () => {
+      socketInstance.disconnect()
+    }
+  }, [huntId, token])
+
+  useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight
+    }
+  }, [messages])
+
+  const handleSendMessage = (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!socket || !newMessage.trim()) return
+
+    socket.emit('sendMessage', {
+      huntId,
+      message: newMessage.trim()
+    })
+
+    setNewMessage('')
+  }
+
+  const formatTime = (date: Date) => {
+    return new Date(date).toLocaleTimeString('en-US', {
+      hour: '2-digit',
+      minute: '2-digit'
+    })
+  }
+
+  return (
+    <Card className="w-full max-w-md mx-auto">
+      <CardHeader>
+        <CardTitle className="flex items-center justify-between">
+          Hunt Chat
+          <span className={`h-3 w-3 rounded-full ${isConnected ? 'bg-green-500' : 'bg-red-500'}`} />
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        <ScrollArea className="h-[400px] pr-4" ref={scrollRef}>
+          <div className="space-y-4">
+            {messages.map((msg, index) => (
+              <div key={index} className="flex items-start gap-3">
+                <Avatar>
+                  <AvatarImage src={`https://avatar.vercel.sh/${msg.username}`} />
+                  <AvatarFallback>{msg.username[0]}</AvatarFallback>
+                </Avatar>
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2">
+                    <span className="font-semibold">{msg.username}</span>
+                    <span className="text-xs text-muted-foreground">
+                      {formatTime(msg.timestamp)}
+                    </span>
+                  </div>
+                  <p className="text-sm">{msg.message}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </ScrollArea>
+        <form onSubmit={handleSendMessage} className="mt-4 flex gap-2">
+          <Input
+            value={newMessage}
+            onChange={(e) => setNewMessage(e.target.value)}
+            placeholder="Type your message..."
+            disabled={!isConnected}
+          />
+          <Button type="submit" disabled={!isConnected || !newMessage.trim()}>
+            Send
+          </Button>
+        </form>
+      </CardContent>
+    </Card>
+  )
+}
