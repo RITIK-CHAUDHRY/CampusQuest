@@ -1,0 +1,250 @@
+'use client'
+
+import { useState } from 'react'
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Input } from "@/components/ui/input"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import { Badge } from "@/components/ui/badge"
+import { 
+  Users, 
+  Map, 
+  Settings, 
+  MoreVertical, 
+  Edit, 
+  Trash, 
+  Ban,
+  CheckCircle,
+  XCircle 
+} from 'lucide-react'
+
+export default function Component() {
+  const [activeTab, setActiveTab] = useState('users')
+
+  const users = [
+    { id: 1, name: 'John Doe', email: 'john@example.com', status: 'active', huntsCompleted: 5 },
+    { id: 2, name: 'Jane Smith', email: 'jane@example.com', status: 'inactive', huntsCompleted: 3 },
+  ]
+
+  const hunts = [
+    { 
+      id: 1, 
+      title: 'Campus Explorer', 
+      status: 'active', 
+      participants: 25,
+      startDate: '2024-02-01',
+      endDate: '2024-02-15'
+    },
+    { 
+      id: 2, 
+      title: 'Historical Hunt', 
+      status: 'upcoming',
+      participants: 0,
+      startDate: '2024-03-01',
+      endDate: '2024-03-15'
+    },
+  ]
+
+  return (
+    <div className="container mx-auto py-8 px-4">
+      <div className="grid gap-6">
+        {/* Dashboard Header */}
+        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+          <h1 className="text-3xl font-bold">Admin Dashboard</h1>
+          <Button>Create New Hunt</Button>
+        </div>
+
+        {/* Stats Overview */}
+        <div className="grid gap-4 md:grid-cols-3">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-sm font-medium">Total Users</CardTitle>
+              <Users className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">1,234</div>
+              <p className="text-xs text-muted-foreground">
+                +12% from last month
+              </p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-sm font-medium">Active Hunts</CardTitle>
+              <Map className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">23</div>
+              <p className="text-xs text-muted-foreground">
+                5 completing this week
+              </p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-sm font-medium">Completion Rate</CardTitle>
+              <Settings className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">78%</div>
+              <p className="text-xs text-muted-foreground">
+                +5% from last month
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Main Content */}
+        <Card>
+          <CardContent className="pt-6">
+            <Tabs value={activeTab} onValueChange={setActiveTab}>
+              <TabsList>
+                <TabsTrigger value="users">Users</TabsTrigger>
+                <TabsTrigger value="hunts">Hunts</TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="users" className="space-y-4">
+                <div className="flex justify-between">
+                  <Input
+                    placeholder="Search users..."
+                    className="max-w-sm"
+                  />
+                  <Button variant="outline">Export Data</Button>
+                </div>
+
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Name</TableHead>
+                      <TableHead>Email</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Hunts Completed</TableHead>
+                      <TableHead className="w-[100px]">Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {users.map((user) => (
+                      <TableRow key={user.id}>
+                        <TableCell>{user.name}</TableCell>
+                        <TableCell>{user.email}</TableCell>
+                        <TableCell>
+                          <Badge
+                            variant={user.status === 'active' ? 'default' : 'secondary'}
+                          >
+                            {user.status}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>{user.huntsCompleted}</TableCell>
+                        <TableCell>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" className="h-8 w-8 p-0">
+                                <MoreVertical className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem>
+                                <Edit className="mr-2 h-4 w-4" />
+                                Edit
+                              </DropdownMenuItem>
+                              <DropdownMenuItem className="text-red-600">
+                                <Ban className="mr-2 h-4 w-4" />
+                                Ban User
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </TabsContent>
+
+              <TabsContent value="hunts" className="space-y-4">
+                <div className="flex justify-between">
+                  <Input
+                    placeholder="Search hunts..."
+                    className="max-w-sm"
+                  />
+                  <Button variant="outline">Export Data</Button>
+                </div>
+
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Title</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Participants</TableHead>
+                      <TableHead>Start Date</TableHead>
+                      <TableHead>End Date</TableHead>
+                
+                      <TableHead className="w-[100px]">Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {hunts.map((hunt) => (
+                      <TableRow key={hunt.id}>
+                        <TableCell>{hunt.title}</TableCell>
+                        <TableCell>
+                          <Badge
+                            variant={hunt.status === 'active' ? 'default' : 'secondary'}
+                          >
+                            {hunt.status}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>{hunt.participants}</TableCell>
+                        <TableCell>{new Date(hunt.startDate).toLocaleDateString()}</TableCell>
+                        <TableCell>{new Date(hunt.endDate).toLocaleDateString()}</TableCell>
+                        <TableCell>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" className="h-8 w-8 p-0">
+                                <MoreVertical className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem>
+                                <Edit className="mr-2 h-4 w-4" />
+                                Edit
+                              </DropdownMenuItem>
+                              <DropdownMenuItem>
+                                <CheckCircle className="mr-2 h-4 w-4" />
+                                Activate
+                              </DropdownMenuItem>
+                              <DropdownMenuItem>
+                                <XCircle className="mr-2 h-4 w-4" />
+                                Deactivate
+                              </DropdownMenuItem>
+                              <DropdownMenuItem className="text-red-600">
+                                <Trash className="mr-2 h-4 w-4" />
+                                Delete
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </TabsContent>
+            </Tabs>
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  )
+}
