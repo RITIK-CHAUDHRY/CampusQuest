@@ -1,0 +1,15 @@
+.home-page-container {
+    /* max-width: fit-content;
+    margin-left: auto;
+    margin-right: auto; */
+}
+.home-page-card-container {
+    vertical-align: middle;
+}
+
+.home-page-heading {
+    background: #6393C1;
+    /* background: linear-gradient(to right, #2069CF 0%, #CF1512 100%); */
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
